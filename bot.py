@@ -1,10 +1,12 @@
 #Nathan e Gus: criem um outro arquivo pro desktop. Deixem este aqui apenas para o bot.
 #Helen: Ajusta este código para que a localização seja armazenada em um arquivo conforme a Bagatini informou. Acho que a melhor forma seria CSV.
-
+# VOU TERMINAR DE COMENTA EM PUTRO MOMENTO, ESTOU ENVIANDO ASSIM PARA QUE POSSAM AGILIZAR NO RESTO.
 
 import logging # Registra eventos 
 import csv # Biblioteca usada para criar e manipular csv
 import os #Para manipular os arquivos
+import subprocess # Usado para abrir o programa desktop como um processo separado
+import sys # Para pegar o caminho do interpretador python em uso
 
 # Update - atualiza o bot
 # KeyboardButton - Criação do botão
@@ -16,16 +18,12 @@ from telegram import Update, KeyboardButton, ReplyKeyboardMarkup
 # CommandHandler - associa um comando a uma função 
 from telegram.ext import ApplicationBuilder, ContextTypes, CommandHandler, MessageHandler, filters
 
-#COnfigura o formato das logs
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO) 
 
-#roda quando o usuário da /start no telegram
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    #cria o botão 
     botao_localizacao = KeyboardButton(text = "Pedir uma pizza", request_location = True)
-    #monta o teclado, desaparece ao ser usado uma vez.
+
     teclado = ReplyKeyboardMarkup([[botao_localizacao]], resize_keyboard = True, one_time_keyboard = True)
-    #envia mensagem para o usuário
     await context.bot.send_message(chat_id=update.effective_chat.id, text="Para localizar a entrega mais próxima, toque no botão abaixo e envie sua localização atual.", reply_markup = teclado)
 
 #Essa função recebe e salva a localização enviada
@@ -46,8 +44,19 @@ async def receber_localizacoes(update:Update, context: ContextTypes. DEFAULT_TYP
         escreve.writerow([update.effective_user.first_name, update.effective_user.last_name, latitude, longitude]) #salva dados: nome,sobrenome,latitude e longitude
     
     # envia uma mensagem enviando a confirmação do recebimento das informações
-    await context.bot.send_message(chat_id= update.effective_chat.id,text="Localização recebida! Já estamos calculando a entrega mais próxima 🍕")
+    await context.bot.send_message(
+        chat_id= update.effective_chat.id,
+        text="Localização recebida! Já estamos calculando a entrega mais próxima 🍕"
+    )
 if __name__ == '__main__':
+    # Abre o painel desktop em outro processo, antes de iniciar o bot.
+    # Usamos subprocess (e não thread) porque o tkinter precisa rodar
+    # na sua própria thread principal — assim ele não trava nem é
+    # travado pelo loop assíncrono do bot.
+    pasta_atual = os.path.dirname(os.path.abspath(__file__))
+    caminho_desktop = os.path.join(pasta_atual, 'desktop.py')
+    subprocess.Popen([sys.executable, caminho_desktop])
+
     aplicacao_bot = ApplicationBuilder().token('8988223495:AAEgC4U3o9HHoGkDVBRK9k-BtBP_UAsQw0g').build() #TOKEN
     
     start_handler = CommandHandler('start', start)
