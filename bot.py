@@ -21,9 +21,15 @@ from telegram.ext import ApplicationBuilder, ContextTypes, CommandHandler, Messa
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO) 
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    # Cria o botão que, quando tocado, pede ao Telegram a localização do usuário
     botao_localizacao = KeyboardButton(text = "Pedir uma pizza", request_location = True)
-
+    
+    # Monta o teclado personalizado com o botão acima.
+    # resize_keyboard ajusta o tamanho do teclado pra ficar mais compacto
+    # one_time_keyboard faz o teclado desaparecer depois de usado uma vez
     teclado = ReplyKeyboardMarkup([[botao_localizacao]], resize_keyboard = True, one_time_keyboard = True)
+
+    # Envia a mensagem de boas-vindas pro usuário, junto com o teclado/botão criado acima   
     await context.bot.send_message(chat_id=update.effective_chat.id, text="Para localizar a entrega mais próxima, toque no botão abaixo e envie sua localização atual.", reply_markup = teclado)
 
 #Essa função recebe e salva a localização enviada
